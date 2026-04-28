@@ -38,6 +38,9 @@ Backend system for educational content distribution with role-based access contr
 - GET `/api/broadcast/live/:teacherId` - Get active content
 - GET `/api/broadcast/live/:teacherId?subject=maths` - Filter by subject
 
+## deployement 
+Health Check: https://content-broadcasting-system-h4uo.onrender.com/health 
+
 ## Testing Flow
 
 1. Register principal and teacher
