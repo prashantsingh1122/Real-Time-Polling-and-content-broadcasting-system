@@ -43,7 +43,7 @@ export default function PublicDashboard() {
     : allCards.filter(c => c.subject === filter)
 
   return (
-    <div className="min-h-screen bg-red-700">
+    <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <nav className="bg-white shadow sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
