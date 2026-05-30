@@ -47,3 +47,7 @@ Health Check: https://content-broadcasting-system-h4uo.onrender.com/health
 2. Login as teacher, upload content with time window
 3. Login as principal, approve content
 4. Access public endpoint to see rotating content
+
+
+## CI/CD
+Automated deployment with GitHub Actions
