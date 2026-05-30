@@ -51,3 +51,40 @@ exports.getLiveContent = async (req, res) => {
     });
   }
 };
+// GET /api/broadcast/all - Public: all live content from all teachers
+exports.getAllLiveContent = async (req, res) => {
+  try {
+    const { Op } = require('sequelize')
+    const { User } = require('../models')
+    const { getActiveContent } = require('../services/schedulingService')
+
+    const now = new Date()
+
+    // Get all teachers
+    const teachers = await User.findAll({
+      where: { role: 'teacher' },
+      attributes: ['id', 'name', 'email']
+    })
+
+    const result = []
+
+    for (const teacher of teachers) {
+      const activeContent = await getActiveContent(teacher.id)
+      if (activeContent && Object.keys(activeContent).length > 0) {
+        result.push({
+          teacher: { id: teacher.id, name: teacher.name },
+          content: activeContent
+        })
+      }
+    }
+
+    res.json({
+      success: true,
+      total: result.length,
+      data: result
+    })
+  } catch (error) {
+    console.error('All live content error:', error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+}

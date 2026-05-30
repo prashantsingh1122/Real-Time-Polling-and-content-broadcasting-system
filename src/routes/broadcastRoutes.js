@@ -1,8 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const { getLiveContent } = require('../controllers/broadcastController');
+const express = require('express')
+const router = express.Router()
+const { getLiveContent, getAllLiveContent } = require('../controllers/broadcastController')
 
-// Public route - no authentication needed (students access this)
-router.get('/live/:teacherId', getLiveContent);
+router.get('/all', getAllLiveContent)
+router.get('/live/:teacherId', getLiveContent)
 
-module.exports = router;
+module.exports = router
