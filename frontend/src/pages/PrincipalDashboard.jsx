@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import socket from '../services/socket'
 import API from '../services/api'
 
 export default function PrincipalDashboard() {
@@ -14,12 +15,26 @@ export default function PrincipalDashboard() {
   const [rejectReason, setRejectReason] = useState('')
 
   useEffect(() => {
-    if (!user.id || user.role !== 'principal') {
-      navigate('/login')
-      return
-    }
-    fetchContent()
-  }, [])
+  if (!user.id || user.role !== 'principal') {
+    navigate('/login')
+    return
+  }
+  fetchContent()
+
+  // Connect socket
+  socket.connect()
+  socket.emit('join_principal') // join principal room
+
+  // When new content is uploaded by any teacher → refresh list
+  socket.on('new_content_uploaded', () => {
+    fetchContent() // auto refresh pending list
+  })
+
+  return () => {
+    socket.off('new_content_uploaded')
+    socket.disconnect()
+  }
+}, [])
 
   const fetchContent = async () => {
     setLoading(true)

@@ -24,6 +24,17 @@ export default function StudentView() {
 
   useEffect(() => {
     fetchLiveContent()
+
+    // Connect socket
+    socket.connect()
+    socket.emit('join_teacher', teacherId)
+
+    // Listen for new approved content
+    socket.on('content_approved', (data) => {
+      setNotification(`📢 New content available: ${data.content.title}`)
+      fetchLiveContent()
+      setTimeout(() => setNotification(''), 5000)
+    })
     // Auto refresh every 5 minutes
     const interval = setInterval(fetchLiveContent, 5 * 60 * 1000)
     return () => clearInterval(interval)

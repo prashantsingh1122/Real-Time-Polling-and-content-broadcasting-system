@@ -51,6 +51,13 @@ exports.uploadContent = async (req, res) => {
       uploaded_by: req.user.id,
       status: 'pending'
     });
+    // After Content.create(...)
+const io = req.app.get('io')
+if (io) {
+  io.to('principal_room').emit('new_content_uploaded', {
+    message: 'New content uploaded!'
+  })
+}
 
     res.status(201).json({
       success: true,
