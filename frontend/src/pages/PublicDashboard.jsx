@@ -30,7 +30,7 @@ export default function PublicDashboard() {
   }, [])
 
   // Flatten all content for filtering
-  const allCards = data.flatMap(({ teacher, content }) =>
+  const allCards = (data || []).flatMap(({ teacher, content }) =>
     Object.entries(content).map(([subject, item]) => ({
       teacher,
       subject,
