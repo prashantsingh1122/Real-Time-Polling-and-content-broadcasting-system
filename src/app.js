@@ -11,9 +11,13 @@ const pollRoutes = require('./routes/pollRoutes');
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'https://content-broadcasting-system-three.vercel.app/', // add after deploying
+    'http://65.0.30.203'
+  ],
   credentials: true
-}));
+}))
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
