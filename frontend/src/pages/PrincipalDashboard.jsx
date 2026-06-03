@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import socket from '../services/socket'
 import API from '../services/api'
 
+const blackButton = 'rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50'
+const ghostButton = 'rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50'
+
 export default function PrincipalDashboard() {
   const navigate = useNavigate()
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -15,26 +18,21 @@ export default function PrincipalDashboard() {
   const [rejectReason, setRejectReason] = useState('')
 
   useEffect(() => {
-  if (!user.id || user.role !== 'principal') {
-    navigate('/login')
-    return
-  }
-  fetchContent()
+    if (!user.id || user.role !== 'principal') {
+      navigate('/login')
+      return
+    }
+    fetchContent()
 
-  // Connect socket
-  socket.connect()
-  socket.emit('join_principal') // join principal room
+    socket.connect()
+    socket.emit('join_principal')
+    socket.on('new_content_uploaded', fetchContent)
 
-  // When new content is uploaded by any teacher → refresh list
-  socket.on('new_content_uploaded', () => {
-    fetchContent() // auto refresh pending list
-  })
-
-  return () => {
-    socket.off('new_content_uploaded')
-    socket.disconnect()
-  }
-}, [])
+    return () => {
+      socket.off('new_content_uploaded')
+      socket.disconnect()
+    }
+  }, [])
 
   const fetchContent = async () => {
     setLoading(true)
@@ -53,7 +51,7 @@ export default function PrincipalDashboard() {
     setSuccess('')
     try {
       await API.patch(`/approval/${id}/approve`)
-      setSuccess('Content approved!')
+      setSuccess('Content approved.')
       fetchContent()
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to approve')
@@ -65,7 +63,7 @@ export default function PrincipalDashboard() {
     setError('')
     try {
       await API.patch(`/approval/${rejectModal.id}/reject`, { reason: rejectReason })
-      setSuccess('Content rejected!')
+      setSuccess('Content rejected.')
       setRejectModal({ open: false, id: null })
       setRejectReason('')
       fetchContent()
@@ -79,169 +77,165 @@ export default function PrincipalDashboard() {
     navigate('/login')
   }
 
-  const filteredContents = contents.filter(c => {
-    if (filter === 'all') return true
-    return c.status === filter
-  })
+  const filteredContents = contents.filter(c => filter === 'all' || c.status === filter)
+  const pendingCount = contents.filter(c => c.status === 'pending').length
+  const approvedCount = contents.filter(c => c.status === 'approved').length
+  const rejectedCount = contents.filter(c => c.status === 'rejected').length
 
   const statusBadge = (status) => {
     const styles = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      approved: 'bg-green-100 text-green-700',
-      rejected: 'bg-red-100 text-red-700'
+      pending: 'border-amber-200 bg-amber-50 text-amber-700',
+      approved: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+      rejected: 'border-red-200 bg-red-50 text-red-700'
     }
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
-        {status}
-      </span>
-    )
+    return <span className={`rounded-full border px-2 py-1 text-xs font-medium ${styles[status]}`}>{status}</span>
   }
 
-  const pendingCount = contents.filter(c => c.status === 'pending').length
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar */}
-      <nav className="bg-white shadow px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-800">📡 BroadcastEdu</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">👑 {user.name}</span>
-          <button onClick={handleLogout} className="text-sm text-red-500 hover:text-red-700">
-            Logout
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow p-4 text-center">
-            <p className="text-3xl font-bold text-gray-800">{contents.length}</p>
-            <p className="text-sm text-gray-500 mt-1">Total Content</p>
+    <div className="min-h-screen bg-white text-black" style={{ fontFamily: 'Georgia, Times New Roman, serif' }}>
+      <header className="border-b border-gray-200 bg-white px-6 py-5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black text-xs font-bold text-white">
+              BE
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-black">BroadcastEdu</h1>
+              <p className="text-xs text-gray-500">Principal dashboard</p>
+            </div>
           </div>
-          <div className="bg-white rounded-xl shadow p-4 text-center">
-            <p className="text-3xl font-bold text-yellow-500">{pendingCount}</p>
-            <p className="text-sm text-gray-500 mt-1">Pending Review</p>
-          </div>
-          <div className="bg-white rounded-xl shadow p-4 text-center">
-            <p className="text-3xl font-bold text-green-500">
-              {contents.filter(c => c.status === 'approved').length}
-            </p>
-            <p className="text-sm text-gray-500 mt-1">Approved</p>
+          <div className="flex items-center gap-4">
+            <span className="hidden text-sm text-gray-600 sm:inline">{user.name}</span>
+            <button onClick={handleLogout} className={ghostButton}>Logout</button>
           </div>
         </div>
+      </header>
 
-        {/* Alerts */}
-        {error && <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm">{error}</div>}
-        {success && <div className="bg-green-50 text-green-600 px-4 py-3 rounded-lg mb-4 text-sm">{success}</div>}
+      <main className="mx-auto max-w-6xl px-6 py-10">
+        <section className="mb-8 border-b border-gray-200 pb-8">
+          <p className="text-xs font-medium uppercase tracking-[0.35em] text-gray-500">Review workspace</p>
+          <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-4xl font-bold tracking-tight">Content approval</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
+                Review teacher uploads, approve live material, or send a clear rejection reason.
+              </p>
+            </div>
+            <button onClick={fetchContent} className={blackButton}>Refresh</button>
+          </div>
+        </section>
 
-        {/* Filter Tabs */}
-        <div className="flex gap-2 mb-4">
-          {['all', 'pending', 'approved', 'rejected'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
-                filter === f
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {f} {f === 'pending' && pendingCount > 0 && <span className="ml-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
-            </button>
+        <section className="mb-8 grid gap-4 md:grid-cols-4">
+          {[
+            ['Total Content', contents.length],
+            ['Pending Review', pendingCount],
+            ['Approved', approvedCount],
+            ['Rejected', rejectedCount]
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="text-3xl font-bold text-black">{value}</p>
+              <p className="mt-2 text-sm text-gray-600">{label}</p>
+            </div>
           ))}
-        </div>
+        </section>
 
-        {/* Content Table */}
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          {loading ? (
-            <div className="p-8 text-center text-gray-500">Loading...</div>
-          ) : filteredContents.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">No content found</div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
-                <tr>
-                  <th className="px-4 py-3 text-left">Title</th>
-                  <th className="px-4 py-3 text-left">Subject</th>
-                  <th className="px-4 py-3 text-left">File</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-left">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredContents.map(c => (
-                  <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-800">
-                      {c.title}
-                      {c.rejection_reason && (
-                        <p className="text-xs text-red-500 mt-1">Reason: {c.rejection_reason}</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 capitalize text-gray-600">{c.subject}</td>
-                    <td className="px-4 py-3">
-                      <a
-                        href={c.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-500 hover:underline"
-                      >
-                        View File
-                      </a>
-                    </td>
-                    <td className="px-4 py-3">{statusBadge(c.status)}</td>
-                    <td className="px-4 py-3">
-                      {c.status === 'pending' && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleApprove(c.id)}
-                            className="bg-green-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-green-600"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => setRejectModal({ open: true, id: c.id })}
-                            className="bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+        {error && <div className="mb-5 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        {success && <div className="mb-5 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
 
-      {/* Reject Modal */}
+        <section>
+          <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.25em] text-gray-500">Queue</p>
+              <h3 className="mt-2 text-2xl font-bold">Teacher uploads</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {['all', 'pending', 'approved', 'rejected'].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium capitalize transition ${
+                    filter === f
+                      ? 'border-black bg-black text-white'
+                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {f}
+                  {f === 'pending' && pendingCount > 0 && <span className="ml-2 rounded-full bg-red-600 px-1.5 py-0.5 text-xs text-white">{pendingCount}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            {loading ? (
+              <div className="p-8 text-center text-gray-500">Loading...</div>
+            ) : filteredContents.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">No content found</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-gray-200 bg-gray-50 text-left text-gray-600">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Title</th>
+                      <th className="px-4 py-3 font-medium">Subject</th>
+                      <th className="px-4 py-3 font-medium">File</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {filteredContents.map(c => (
+                      <tr key={c.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-black">
+                          {c.title}
+                          {c.rejection_reason && <p className="mt-1 text-xs text-red-600">Reason: {c.rejection_reason}</p>}
+                        </td>
+                        <td className="px-4 py-3 capitalize text-gray-600">{c.subject}</td>
+                        <td className="px-4 py-3">
+                          <a href={c.file_url} target="_blank" rel="noreferrer" className="text-gray-700 underline-offset-4 hover:underline">
+                            View File
+                          </a>
+                        </td>
+                        <td className="px-4 py-3">{statusBadge(c.status)}</td>
+                        <td className="px-4 py-3">
+                          {c.status === 'pending' ? (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleApprove(c.id)} className="rounded-lg bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800">
+                                Approve
+                              </button>
+                              <button onClick={() => setRejectModal({ open: true, id: c.id })} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50">
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">No action</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
       {rejectModal.open && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Reject Content</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+            <h3 className="text-xl font-bold text-black">Reject content</h3>
+            <p className="mt-2 text-sm text-gray-600">Give the teacher a short reason so they can fix the upload.</p>
             <textarea
               value={rejectReason}
               onChange={e => setRejectReason(e.target.value)}
-              rows={3}
+              rows={4}
               placeholder="Enter rejection reason..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 mb-4"
+              className="mt-4 w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-200"
             />
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => setRejectModal({ open: false, id: null })}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReject}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
-              >
-                Reject
-              </button>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setRejectModal({ open: false, id: null })} className={ghostButton}>Cancel</button>
+              <button onClick={handleReject} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Reject</button>
             </div>
           </div>
         </div>

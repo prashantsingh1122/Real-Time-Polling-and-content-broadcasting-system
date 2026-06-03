@@ -26,11 +26,14 @@ const Poll = sequelize.define('Poll', {
   end_time: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'Polls',
-  timestamps: false,
-  createdAt: 'created_at'
+  timestamps: false
 });
 
 module.exports = Poll;

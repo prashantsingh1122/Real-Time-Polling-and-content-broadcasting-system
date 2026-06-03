@@ -18,11 +18,20 @@ const Vote = sequelize.define('Vote', {
   voter_session: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'Votes',
   timestamps: false,
-  createdAt: 'created_at'
+  indexes: [
+    {
+      unique: true,
+      fields: ['poll_id', 'voter_session']
+    }
+  ]
 });
 
 module.exports = Vote;

@@ -1,5 +1,18 @@
 const { Poll, Vote, User } = require('../models');
-const { Op } = require('sequelize');
+
+const buildPollWithVotes = async (poll) => {
+  const votes = await Vote.findAll({ where: { poll_id: poll.id } });
+  const voteCounts = poll.options.map((opt, i) => ({
+    option: opt,
+    votes: votes.filter(v => v.option_index === i).length
+  }));
+
+  return {
+    ...poll.toJSON(),
+    vote_counts: voteCounts,
+    total_votes: votes.length
+  };
+};
 
 // POST /api/polls - Teacher creates a poll
 exports.createPoll = async (req, res) => {
@@ -28,23 +41,28 @@ exports.createPoll = async (req, res) => {
       is_active: true
     });
 
+    const pollWithVotes = {
+      ...poll.toJSON(),
+      teacher: {
+        id: req.user.id,
+        name: req.user.name
+      },
+      vote_counts: poll.options.map(option => ({ option, votes: 0 })),
+      total_votes: 0
+    };
+
     // Notify all students via WebSocket
     const io = req.app.get('io')
     if (io) {
       io.to('public_dashboard').emit('new_poll', {
-        poll: {
-          id: poll.id,
-          question: poll.question,
-          options: poll.options,
-          teacher_id: poll.teacher_id
-        }
+        poll: pollWithVotes
       })
     }
 
     res.status(201).json({
       success: true,
       message: 'Poll created successfully',
-      data: { poll }
+      data: { poll: pollWithVotes }
     });
   } catch (error) {
     console.error('Create poll error:', error);
@@ -60,19 +78,7 @@ exports.getMyPolls = async (req, res) => {
       order: [['created_at', 'DESC']]
     });
 
-    // Get vote counts for each poll
-    const pollsWithVotes = await Promise.all(polls.map(async (poll) => {
-      const votes = await Vote.findAll({ where: { poll_id: poll.id } });
-      const voteCounts = poll.options.map((opt, i) => ({
-        option: opt,
-        votes: votes.filter(v => v.option_index === i).length
-      }));
-      return {
-        ...poll.toJSON(),
-        vote_counts: voteCounts,
-        total_votes: votes.length
-      };
-    }));
+    const pollsWithVotes = await Promise.all(polls.map(buildPollWithVotes));
 
     res.json({
       success: true,
@@ -136,42 +142,33 @@ exports.deletePoll = async (req, res) => {
 // GET /api/polls/active - Public: get all active polls
 exports.getActivePolls = async (req, res) => {
   try {
-    const now = new Date();
     const polls = await Poll.findAll({
       where: {
-        is_active: true,
-        [Op.or]: [
-          { end_time: null },
-          { end_time: { [Op.gt]: now } }
-        ]
+        is_active: true
       },
-      include: [{
-        model: User,
-        as: 'teacher',
-        attributes: ['id', 'name']
-      }],
+      include: [
+        {
+          model: User,
+          as: 'teacher',
+          attributes: ['id', 'name']
+        }
+      ],
       order: [['created_at', 'DESC']]
     });
 
+    const visiblePolls = polls.filter(poll => {
+      return !poll.end_time || new Date(poll.end_time) > new Date();
+    });
+
     // Get vote counts
-    const pollsWithVotes = await Promise.all(polls.map(async (poll) => {
-      const votes = await Vote.findAll({ where: { poll_id: poll.id } });
-      const voteCounts = poll.options.map((opt, i) => ({
-        option: opt,
-        votes: votes.filter(v => v.option_index === i).length
-      }));
-      return {
-        ...poll.toJSON(),
-        vote_counts: voteCounts,
-        total_votes: votes.length
-      };
-    }));
+    const pollsWithVotes = await Promise.all(visiblePolls.map(buildPollWithVotes));
 
     res.json({
       success: true,
       data: pollsWithVotes
     });
   } catch (error) {
+    console.error('Get active polls error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
