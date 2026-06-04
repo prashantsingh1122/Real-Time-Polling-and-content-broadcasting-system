@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Content Broadcasting System API
+  title: EduCast – Real-Time Content Broadcasting Platform
   version: 1.0.0
   contact:
     name: Prashant Singh
@@ -11,7 +11,7 @@ info:
     Click Authorize and enter:
     Bearer <token>
 
-    API documentation for the Content Broadcasting System. This backend supports user authentication, content upload and approval, real-time polling, and live broadcast retrieval.
+    API documentation for the EduCast – Real-Time Content Broadcasting Platform. This backend supports user authentication, content upload and approval, real-time polling, and live broadcast retrieval.
 servers:
   - url: http://localhost:3000
     description: Local development server

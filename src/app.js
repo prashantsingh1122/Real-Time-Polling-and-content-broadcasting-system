@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
@@ -35,6 +38,15 @@ app.use('/api/content', contentRoutes); // ADD THIS
 app.use('/api/approval', approvalRoutes);
 app.use('/api/broadcast', broadcastRoutes); 
 app.use('/api/polls', pollRoutes);
+
+// Swagger UI (serve static swagger.yaml from repo root)
+try {
+  const swaggerPath = path.join(__dirname, '..', 'swagger.yaml');
+  const swaggerDocument = YAML.load(swaggerPath);
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true }));
+} catch (err) {
+  console.warn('Swagger UI not mounted:', err.message);
+}
 
 
 app.use((req, res) => {
