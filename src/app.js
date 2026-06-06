@@ -18,6 +18,7 @@ app.use(cors({
     'http://localhost:5173',
     'https://content-broadcasting-system-three.vercel.app/', // add after deploying
     'http://65.0.30.203'
+    'https://content-broadcasting-system-h4uo.onrender.com'
   ],
   credentials: true
 }))
