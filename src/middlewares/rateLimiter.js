@@ -28,3 +28,4 @@ const broadcastLimiter = rateLimit({
         error: 'Too many broadcast messages, please try again after 1 minute.'
     }
 })
+module.exports = { apiLimiter, authLimiter, broadcastLimiter }
