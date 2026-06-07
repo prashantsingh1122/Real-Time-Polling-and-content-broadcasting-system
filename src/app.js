@@ -38,6 +38,12 @@ app.get('/health', (req, res) => {
   });
 });
 
+//Rate Limiting
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
+app.use('/api/broadcast', broadcastLimiter);
+
+
 app.use('/api/auth', authRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/approval', approvalRoutes);
