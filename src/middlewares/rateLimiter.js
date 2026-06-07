@@ -21,7 +21,7 @@ const authLimiter = rateLimit({
 })
 
 const broadcastLimiter = rateLimit({
-    wnindowMs: 1*60*1000,
+    windowMs: 1*60*1000,
     max: 60,
     message: {
         success: false,
