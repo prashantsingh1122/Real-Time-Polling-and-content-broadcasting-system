@@ -6,6 +6,8 @@ let isConnected = false
 const getClient = async () => {
   if (isConnected && client) return client
 
+  console.log('🔍 REDIS_URL status:', process.env.REDIS_URL ? `SET (starts with: ${process.env.REDIS_URL.substring(0, 10)})` : 'NOT SET')
+
   client = redis.createClient({
     url: process.env.REDIS_URL || 'redis://localhost:6379'
   })
