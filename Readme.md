@@ -250,17 +250,9 @@ These are seeded in `scripts/seed.js` (adjust passwords and env as needed).
 - Manual test scripts are available in the repo.
 - Run frontend linting via `cd frontend && npm run lint`.
 
-**What to do next**
 
-1. Add real Swagger/OpenAPI documentation and expose `/api-docs`.
-2. Add a test runner (Jest/Mocha) and write 10–15 automated tests.
-3. Add the public app URL to the Live Demo Links section.
-4. Add a CI step for tests and linting before `docker compose up` in `.github/workflows/deploy.yml`.
 
 ---
 
-If you'd like, I can also help implement:
-- Swagger UI and OpenAPI spec generation.
-- A Jest test suite with 10+ automated tests.
-- A CI workflow update that runs lint and tests before deployment.
+
 
