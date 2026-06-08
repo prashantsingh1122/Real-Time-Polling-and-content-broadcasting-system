@@ -11,12 +11,12 @@ Professional README — recruiter-focused summary, setup, and docs
 
 <p align="center">
   <img src="readme_files/Landing_Page.png" width="45%" />
-  <img src="readme_files/Principal_Dashboard.png" width="45%" />
+  <img src="readme_files/Principal's_Dashboard.png" width="45%" />
 </p>
 
 <p align="center">
-  <img src="readme_files/Teacher_Dashboard.png" width="45%" />
-  <img src="readme_files/Student_View.png" width="45%" />
+  <img src="readme_files/Teacher's_Dashboard.png" width="45%" />
+  <img src="readme_files/Student's_View.png" width="45%" />
 </p>
 
 **Project Overview**
@@ -131,21 +131,6 @@ Key environment variables
 - `REDIS_URL`
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET`
 - `JWT_SECRET`
-
-**Screenshots**
-
-The repo includes screenshot assets in `readme_files/` for demo reference.
-
-- Landing page: `readme_files/Landing_Page.png`
-- Login page: `readme_files/Login_with_demo_id.png`
-- Principal dashboard: `readme_files/Principal's_Dashboard.png`
-- Student view: `readme_files/Student's_View.png`
-- Teacher poll & content view: `readme_files/Teacher's_Poll&Contents.png`
-
-![Landing Page](readme_files/Landing_Page.png)
-
-![Teacher Poll & Contents](readme_files/Teacher's_Poll&Contents.png)
-
 
 
 **Swagger / OpenAPI Docs**
