@@ -15,7 +15,7 @@ Professional README — recruiter-focused summary, setup, and docs
 </p>
 
 <p align="center">
-  <img src="readme_files/Teacher's_Poll&Contents.png" width="45%" />
+  <img src="readme_files/Teacher's_Poll&Contents.png" width="45%" /> 
   <img src="readme_files/Student's_View.png" width="45%" />
 </p>
 
