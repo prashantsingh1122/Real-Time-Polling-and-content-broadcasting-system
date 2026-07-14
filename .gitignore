@@ -3,3 +3,6 @@ node_modules/
 uploads/
 frontend/.env.development
 frontend/.env.production
+
+# Middleware documentation files
+src/middlewares/*-readme.md
