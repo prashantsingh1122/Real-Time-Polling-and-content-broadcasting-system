@@ -25,3 +25,32 @@ So the short answer is:
 
 Middleware is for more than private routes
 It is a general mechanism for handling requests and responses in a flexible way
+
+
+## In Express, next is used to pass control to the next middleware or route handler.
+
+Example:
+
+app.get('/profile',     authMiddleware, (req, res) => {
+            res.send('Profile');
+            });
+
+If authMiddleware does this:
+
+function authMiddleware(req, res, next) {
+  if (!req.user) {
+    return res.status(401).send('Unauthorized');
+  }
+  next();
+            
+
+Then:
+
+
+}
+
+## mean
+Next is used to pass the flow to the next middleware or route handler
+next() means: "everything is okay, continue to the next step"
+If you do not call next(), the request stops there
+So, next is basically the "continue" function for middleware.
