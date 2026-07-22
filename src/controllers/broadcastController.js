@@ -96,7 +96,7 @@ exports.getAllLiveContent = async (req, res) => {
     }
 
     // Store in cache for 60 seconds
-    await setCache(cacheKey, response, 60)
+    await setCache(cacheKey, response, 6000)
 
     res.json(response)
   } catch (error) {

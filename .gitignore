@@ -6,3 +6,6 @@ frontend/.env.production
 
 # Middleware documentation files
 src/middlewares/*-readme.md
+
+# Controllers documentation file
+src/controlllers/*-readme.md

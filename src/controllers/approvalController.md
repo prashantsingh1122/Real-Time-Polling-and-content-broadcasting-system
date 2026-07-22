@@ -1,25 +1,60 @@
-# approvalController — Overview
+# approvalController
 
-Responsibilities
-- List pending content requiring approval.
-- Approve or reject content and update its published state.
+## Overview
 
-Main functions
-- `getPendingContent(req, res, next)` — return content awaiting approval.
-- `approveContent(req, res, next)` — mark content published and perform necessary side-effects.
-- `rejectContent(req, res, next)` — mark content rejected and optionally notify uploader.
+`src/controllers/approvalController.js` handles workflows for reviewing and approving content. It exposes endpoints to list pending items and to approve or reject content.
 
-Routes
-- Mounted under `/api/approval` and protected by `authenticate` and `authorize('principal')` in `src/routes/approvalRoutes.js`.
+---
 
-Middleware used
-- `authenticate` — token verification.
-- `authorize('principal')` — role check for principal users.
+## What this controller does
 
-Typical flow
-1. Request -> route -> `authenticate` -> `authorize('principal')` -> controller.
-2. Controller updates content state in DB and returns status.
+- Lists content that requires approval.
+- Approves or rejects content and updates its published state.
+- Triggers side effects (notifications, audit logs) via services — controller orchestrates these actions.
 
-Notes
-- Keep notification logic (email, socket) in a service and call it from the controller to keep tests focused.
-- Audit relevant changes (who approved, when) for traceability.
+---
+
+## Main logic flow
+
+### List pending
+1. Route `GET /api/approval/pending` runs `authenticate` and `authorize('principal')`.
+2. Controller queries DB for content with pending status and returns results.
+
+### Approve / Reject
+1. Routes to `PATCH /api/approval/:id/approve` and `/reject` run `authenticate` + `authorize('principal')`.
+2. Controller updates content status, records approver metadata (who/when), and calls notification/audit services.
+3. Controller returns success or error response based on the operation.
+
+---
+
+## Project flow summary
+
+1. Approval routes in `src/routes/approvalRoutes.js` protect endpoints with `authenticate` and `authorize('principal')`.
+2. Controller updates DB and delegates notifications to services (email, sockets).
+3. Approved items become visible in published content flows; rejections may notify the uploader.
+
+---
+
+## Error handling
+
+- Unauthorized access → `401`/`403` (handled by middleware).
+- Content not found → `404`.
+- Unexpected failures in side-effect services → log and return `500`.
+
+Record approver and timestamp for traceability; keep notification logic separated for easier testing.
+
+---
+
+## Important files involved
+
+- `src/controllers/approvalController.js`
+- `src/routes/approvalRoutes.js`
+- `src/middlewares/auth.js`
+- `src/middlewares/rbac.js`
+- `src/services` (notification/audit services)
+
+---
+
+## In short
+
+The controller enforces approval workflows and delegates notifications and audits to services; middleware ensures only authorized principals can act.
