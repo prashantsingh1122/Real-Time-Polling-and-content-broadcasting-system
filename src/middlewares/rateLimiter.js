@@ -2,7 +2,7 @@ const rateLimit = require('express-rate-limit');
 
 const apiLimiter=rateLimit({
     windowMs: 15*60*1000,
-    max: 100,
+    max: 5000,   // <-- temporarily raised from 100, FOR LOCAL TESTING ONLY
     message:{
         success: false,
         error: 'Too many requests, please try again after 15 minutes.'
@@ -13,7 +13,7 @@ const apiLimiter=rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15*60*1000,
-    max: 5,
+    max: 1000,   // <-- temporarily raised from 5 to 1000, FOR LOCAL TESTING ONLY
      message: {
     success: false,
     error: 'Too many login attempts, please try again after 15 minutes'
