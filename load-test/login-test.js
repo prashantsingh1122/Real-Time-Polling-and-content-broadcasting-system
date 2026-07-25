@@ -4,9 +4,11 @@ import {check,sleep} from 'k6';
 
 export const options = {
     stages:[
-        {duration:'30s',target:5},  // ramp up to 5 fake users
-        { duration: '30s', target: 5 },   // hold steady at 5 users
-        { duration: '10s', target: 0 },   // ramp down
+        { duration: '20s', target: 5 },    // warm up
+        { duration: '30s', target: 20 },   // ramp to 20 users
+        { duration: '30s', target: 50 },   // ramp to 50 users
+        { duration: '30s', target: 100 },  // ramp to 100 users
+        { duration: '20s', target: 0 },    // cool down  // ramp down
      ],
 };
 

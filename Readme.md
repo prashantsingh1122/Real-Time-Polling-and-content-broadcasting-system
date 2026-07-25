@@ -216,6 +216,35 @@ When a user exceeds the rate limit, they receive a 429 (Too Many Requests) respo
 
 These events are part of the real-time Socket.IO integration and make the system stand out for live classroom updates.
 
+**Load Testing & Performance Investigation**
+
+The login endpoint was load-tested with k6 to measure how the Node.js/Express + PostgreSQL auth path behaves under increasing concurrent traffic.
+
+- **Target endpoint**: `POST /api/auth/login`
+- **Tooling**: k6
+- **Traffic profile**: ramped from 5 to 100 virtual users over roughly 2 minutes
+- **Baseline under 100 virtual users**: p90 latency around `680ms`, p95 latency around `746ms`
+- **Best-case unloaded response time**: around `230ms`
+- **CPU observation during test**: peaked near `71%`, averaged around `55%`
+
+**What was investigated**
+
+- Found two stacked rate limiters (`apiLimiter` and `authLimiter`) applying to auth routes, which initially masked clean performance results.
+- Audited PostgreSQL constraints and found around 100 duplicate unique constraints on the `email` column.
+- Traced the duplicate constraints to `sequelize.sync({ alter: true })` running repeatedly during development restarts.
+- Removed the recurring `alter: true` sync behavior to prevent future schema drift.
+- Tested database connection pool sizes `3`, `5`, `8`, and `15`.
+
+**Conclusion**
+
+The latency increase under load did not correlate with CPU saturation, database indexing, or connection pool size. After eliminating those application-level causes, the remaining bottleneck is most consistent with shared infrastructure limits and network variability on the free-tier Supabase database rather than a fixable backend code issue.
+
+To reproduce the login load test:
+
+```bash
+k6 run load-test/login-test.js
+```
+
 **Automated Tests**
 
 - Current repo test utilities:

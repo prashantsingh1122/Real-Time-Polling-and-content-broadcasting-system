@@ -43,9 +43,9 @@ app.get('/health', (req, res) => {
 });
 
 //Rate Limiting
-app.use('/api', apiLimiter);
-app.use('/api/auth', authLimiter);
-app.use('/api/broadcast', broadcastLimiter);
+// app.use('/api', apiLimiter);
+// app.use('/api/auth', authLimiter);
+// app.use('/api/broadcast', broadcastLimiter);
 
 
 app.use('/api/auth', authRoutes);

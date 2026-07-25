@@ -46,7 +46,10 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connected');
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
+    // if you change a model later (e.g. add a new column), plain sync() won't apply that change automatically
+    //  — you'd need to either temporarily use alter: true once on purpose, or manually run an ALTER TABLE in 
+    // Supabase's SQL editor
     console.log('✅ Database synchronized');
 
     const PORT = process.env.PORT || 3000;

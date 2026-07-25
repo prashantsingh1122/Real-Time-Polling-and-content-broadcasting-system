@@ -16,7 +16,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
   
   // Connection pool (adjusted for free tier)
   pool: {
-    max: 3,      // Lower for free tier
+    max: 5,      // Lower for free tier but in increased from 3 to 15 to handle more concurrent connections
     min: 0,
     acquire: 30000,
     idle: 10000
