@@ -245,6 +245,25 @@ To reproduce the login load test:
 k6 run load-test/login-test.js
 ```
 
+**Load Testing & Optimization: Poll Voting Endpoint**
+
+The poll voting flow was also load-tested and optimized to improve real-time responsiveness as poll participation grew.
+
+- **Target endpoint**: `POST /api/polls/:id/vote`
+- **Tooling**: k6
+- **Test approach**: cast votes in batches against the same poll while tracking latency as the total vote count increased
+- **Before fix**: at roughly 1400 accumulated votes, p90 latency reached `4.24s`, p95 reached `5.65s`, and the worst-case request took `36.09s` with 2 failed requests
+- **Root cause**: every vote path re-fetched all prior votes for that poll and recomputed totals in JavaScript, creating an O(n) slowdown as vote counts grew
+- **What was changed**: moved the counting logic to database aggregation using `GROUP BY / COUNT` in the vote path and the related poll-loading paths for consistency
+- **After fix**: p90 and p95 latency dropped to roughly `0.60s`, the worst-case request stayed around `0.90s`, and the vote-count-dependent slowdown was eliminated
+- **Outcome**: the voting endpoint remained stable across successive 500-vote batches, improving tail latency by roughly 7–9x and removing request failures
+
+To reproduce the poll voting load test:
+
+```bash
+k6 run load-test/vote-test.js
+```
+
 **Automated Tests**
 
 - Current repo test utilities:

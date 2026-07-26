@@ -1,11 +1,19 @@
 const { Op } = require('sequelize');
 const { Poll, Vote, User } = require('../models');
+const { fn, col } = require('sequelize');
 
 const buildPollWithVotes = async (poll) => {
-  const votes = await Vote.findAll({ where: { poll_id: poll.id } });
+  const counts = await Vote.findAll({
+    where: { poll_id: poll.id },
+    attributes: ['option_index', [fn('COUNT', col('id')), 'count']],
+    group: ['option_index'],
+    raw: true
+  });
+  const countMap = Object.fromEntries(counts.map(c => [c.option_index, parseInt(c.count)]));
+  const totalVotes = Object.values(countMap).reduce((sum, n) => sum + n, 0);
   const voteCounts = poll.options.map((opt, i) => ({
     option: opt,
-    votes: votes.filter(v => v.option_index === i).length
+    votes: countMap[i] || 0
   }));
 
   const timeRemaining = poll.end_time
@@ -15,7 +23,7 @@ const buildPollWithVotes = async (poll) => {
   return {
     ...poll.toJSON(),
     vote_counts: voteCounts,
-    total_votes: votes.length,
+    total_votes: totalVotes,   // ✅ use the variable we already computed above
     time_remaining: timeRemaining
   };
 };
@@ -180,10 +188,17 @@ exports.getActivePolls = async (req, res) => {
     })
 
     const pollsWithVotes = await Promise.all(polls.map(async (poll) => {
-      const votes = await Vote.findAll({ where: { poll_id: poll.id } })
+      const counts = await Vote.findAll({
+        where: { poll_id: poll.id },
+        attributes: ['option_index', [fn('COUNT', col('id')), 'count']],
+        group: ['option_index'],
+        raw: true
+      })
+      const countMap = Object.fromEntries(counts.map(c => [c.option_index, parseInt(c.count)]))
+      const totalVotes = Object.values(countMap).reduce((sum, n) => sum + n, 0)
       const voteCounts = poll.options.map((opt, i) => ({
         option: opt,
-        votes: votes.filter(v => v.option_index === i).length
+        votes: countMap[i] || 0
       }))
 
       // Calculate time remaining in seconds
@@ -194,7 +209,7 @@ exports.getActivePolls = async (req, res) => {
       return {
         ...poll.toJSON(),
         vote_counts: voteCounts,
-        total_votes: votes.length,
+        total_votes: totalVotes,
         time_remaining: timeRemaining  // seconds left
       }
     }))
@@ -241,10 +256,17 @@ exports.vote = async (req, res) => {
 
     await Vote.create({ poll_id: id, option_index, voter_session });
 
-    const votes = await Vote.findAll({ where: { poll_id: id } });
+    const counts = await Vote.findAll({
+      where: { poll_id: id },
+      attributes: ['option_index', [fn('COUNT', col('id')), 'count']],
+      group: ['option_index'],
+      raw: true
+    });
+    const countMap = Object.fromEntries(counts.map(c => [c.option_index, parseInt(c.count)]));
+    const totalVotes = Object.values(countMap).reduce((sum, n) => sum + n, 0);
     const voteCounts = poll.options.map((opt, i) => ({
       option: opt,
-      votes: votes.filter(v => v.option_index === i).length
+      votes: countMap[i] || 0
     }));
 
     const io = req.app.get('io')
@@ -252,19 +274,19 @@ exports.vote = async (req, res) => {
       io.to('public_dashboard').emit('vote_updated', {
         pollId: id,
         vote_counts: voteCounts,
-        total_votes: votes.length
+        total_votes: totalVotes,
       })
       io.to(`teacher_${poll.teacher_id}`).emit('vote_updated', {
         pollId: id,
         vote_counts: voteCounts,
-        total_votes: votes.length
+        total_votes: totalVotes,
       })
     }
 
     res.json({
       success: true,
       message: 'Vote recorded!',
-      data: { vote_counts: voteCounts, total_votes: votes.length }
+      data: { vote_counts: voteCounts, total_votes: totalVotes }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
